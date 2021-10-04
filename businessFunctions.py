@@ -1,5 +1,6 @@
 import connectMongo
 from pymongo import GEOSPHERE
+import datetime
 
 """
 give all stations with a ratio bike_available/total_stand under 20% between 18h and 19h00 (monday to friday)
@@ -58,4 +59,38 @@ def updateStation(stationName, newStationName):
         {'$set':{'station_name':newStationName.upper()}}
     )
 
-deactivateStations("DE gaulle")
+#2021, 10, 4, 16, 41, 33
+def getRatio():
+    ratio = data_collection.find(
+        { 
+            "date": {
+                "$gte": datetime.datetime(2021, 10, 4, 16, 41),
+                "$lt": datetime.datetime(2021, 10, 4, 17, 53),
+            },
+            '$expr': 
+            {
+                '$lt': [ 
+                {'$divide': ["$bikes_available", { '$cond': [ { '$eq': [ "$stands_available", 0 ] }, 1, {'$sum': ["$stands_available","$bikes_available"]}]}]},
+                0.2
+                ] 
+            },
+        }
+    )
+    """
+        '$expr': 
+            {
+                '$lt': [ 
+                {'$divide': ["$bikes_available", { '$cond': [ { '$eq': [ "$stands_available", 0 ] }, 1, {'$sum': ["$stands_available","$bikes_available"]}]}]},
+                0.2
+                ] 
+            },
+    """
+    for index, result in enumerate(ratio):
+        print(result)
+    
+    print("Total is", ratio.count())
+
+#ratio = data_collection.find({})
+#for index, result in enumerate(ratio):
+    #print(result)
+getRatio()
